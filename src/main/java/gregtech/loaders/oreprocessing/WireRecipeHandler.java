@@ -1,5 +1,6 @@
 package gregtech.loaders.oreprocessing;
 
+import com.google.common.collect.ImmutableMap;
 import gregtech.api.GTValues;
 import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.RecipeMaps;
@@ -25,6 +26,25 @@ import static gregtech.api.recipes.RecipeMaps.PACKER_RECIPES;
 import static gregtech.api.recipes.RecipeMaps.UNPACKER_RECIPES;
 
 public class WireRecipeHandler {
+
+    /**
+     * Guide to the new GregTech CE: Unofficial Cable Processing.
+     *
+     * Cable Covering Fluids:
+     * - Rubber: This can be used for any cable EV-tier or lower. After that it is unavailable.
+     *
+     * - Silicone Rubber: This can be used for any cable tier, saving the amount of fluid needed. However, at IV,
+     *                    it will require a Foil of the cable material as well, making it undesirable.
+     *
+     * - Styrene-Butadiene Rubber (SBR): This can be used for any cable tier, and is the most optimal cable-covering
+     *                                   fluid available.
+     *
+     * Extra Materials for Cable Covering:
+     * - Polyvinyl Chloride (PVC): At HV and above, you can use a Small Pile of PVC to cheapen the cable recipe,
+     *                             halving the amount of fluid needed.
+     *
+     * - Polyphenylene Sulfide (PPS): At LuV, this foil is required to cover cables. Lower tiers will not use it.
+     */
 
     public static final Map<FluidMaterial, Integer> INSULATION_MATERIALS = new HashMap<>();
 
@@ -54,6 +74,13 @@ public class WireRecipeHandler {
     private static final OrePrefix[] CABLE_DOUBLING_ORDER = new OrePrefix[]{
         OrePrefix.cableGtSingle, OrePrefix.cableGtDouble, OrePrefix.cableGtQuadruple, OrePrefix.cableGtOctal, OrePrefix.cableGtHex
     };
+
+    private static final Map<OrePrefix, Integer> INSULATION_AMOUNT = ImmutableMap.of(
+            OrePrefix.cableGtSingle, 1,
+            OrePrefix.cableGtDouble, 1,
+            OrePrefix.cableGtQuadruple, 2,
+            OrePrefix.cableGtOctal, 3,
+            OrePrefix.cableGtHex, 5);
 
     public static void processWireSingle(OrePrefix wirePrefix, IngotMaterial material) {
         RecipeMaps.EXTRUDER_RECIPES.recipeBuilder()
@@ -85,24 +112,7 @@ public class WireRecipeHandler {
         if (material.cableProperties == null) return;
 
         if (isManualInsulatedCable(material)) {
-            if (cableAmount <= 8) {
-                Object[] ingredients = new Object[1 + cableAmount];
-                ingredients[0] = new UnificationEntry(wirePrefix, material);
-                for (int i = 1; i < ingredients.length; i++) {
-                    ingredients[i] = OreDictUnifier.get(OrePrefix.plate, Materials.Rubber);
-                }
-                ModHandler.addShapelessRecipe(String.format("%s_cable_%d", material, cableAmount), cableStack, ingredients);
-            }
-        }
-
-        if (isManualInsulatedCable(material)) {
-            ItemStack rubberStack = OreDictUnifier.get(OrePrefix.plate, Materials.Rubber, cableAmount);
-            RecipeMaps.PACKER_RECIPES.recipeBuilder()
-                .input(wirePrefix, material)
-                .inputs(rubberStack)
-                .outputs(cableStack)
-                .duration(100).EUt(8)
-                .buildAndRegister();
+            generateManualRecipe(wirePrefix, material, cablePrefix, cableAmount);
         }
 
         for(FluidMaterial insulationMaterial : INSULATION_MATERIALS.keySet()) {
@@ -125,6 +135,24 @@ public class WireRecipeHandler {
                 .duration(150).EUt(8)
                 .buildAndRegister();
         }
+    }
+
+    private static void generateManualRecipe(OrePrefix wirePrefix, IngotMaterial material, OrePrefix cablePrefix, int cableAmount) {
+        int insulationAmount = INSULATION_AMOUNT.get(cablePrefix);
+        Object[] ingredients = new Object[insulationAmount + 1];
+        ingredients[0] = OreDictUnifier.get(wirePrefix, material);
+        for (int i = 1; i <= insulationAmount; i++) {
+            ingredients[i] = OreDictUnifier.get(OrePrefix.plate, Materials.Rubber);
+        }
+        ModHandler.addShapelessRecipe(String.format("%s_cable_%d", material, cableAmount), OreDictUnifier.get(cablePrefix, material), ingredients);
+
+        ItemStack rubberStack = OreDictUnifier.get(OrePrefix.plate, Materials.Rubber, insulationAmount);
+        RecipeMaps.PACKER_RECIPES.recipeBuilder()
+                .input(wirePrefix, material)
+                .inputs(rubberStack)
+                .output(cablePrefix, material)
+                .duration(100).EUt(8)
+                .buildAndRegister();
     }
 
 
@@ -205,8 +233,7 @@ public class WireRecipeHandler {
         }
     }
 
-
-        private static int getMaterialAmount(int cableTier, int insulationTier) {
+    private static int getMaterialAmount(int cableTier, int insulationTier) {
         if (cableTier > insulationTier) {
             return -1;
         }
@@ -222,5 +249,4 @@ public class WireRecipeHandler {
         return material instanceof IngotMaterial && ((IngotMaterial) material)
             .blastFurnaceTemperature >= 2800 ? 32 : 8;
     }
-
 }
