@@ -59,6 +59,30 @@ public class AssemblyLineLoader {
                 .duration(600).EUt(10240)
                 .buildAndRegister();
 
+        //todo this is a test recipe!!!!!!
+        RecipeMaps.ASSEMBLY_LINE_RECIPES.recipeBuilder()
+                .input(OrePrefix.stickLong, Materials.NeodymiumMagnetic)
+                .input(OrePrefix.stickLong, Materials.HSSG, 2)
+                .input(OrePrefix.ring, Materials.HSSG, 4)
+                .input(OrePrefix.round, Materials.HSSG, 16)
+                .input(OrePrefix.wireFine, Materials.AnnealedCopper, 64)
+                .input(OrePrefix.wireFine, Materials.AnnealedCopper, 64)
+                .input(OrePrefix.wireFine, Materials.AnnealedCopper, 64)
+                .input(OrePrefix.wireFine, Materials.AnnealedCopper, 64)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .input(OrePrefix.cableGtSingle, Materials.YttriumBariumCuprate, 2)
+                .fluidInputs(Materials.SolderingAlloy.getFluid(L))
+                .fluidInputs(Materials.Lubricant.getFluid(250))
+                .outputs(MetaItems.ELECTRIC_MOTOR_LUV.getStackForm())
+                .duration(600).EUt(10240)
+                .buildAndRegister();
+
         RecipeMaps.ASSEMBLY_LINE_RECIPES.recipeBuilder().inputs(OreDictUnifier.get(OrePrefix.stickLong, Materials.NeodymiumMagnetic, 2), OreDictUnifier.get(OrePrefix.stickLong, Materials.HSSE, 4), OreDictUnifier.get(OrePrefix.ring, Materials.HSSE, 4), OreDictUnifier.get(OrePrefix.round, Materials.HSSE, 16), OreDictUnifier.get(OrePrefix.wireFine, Materials.Platinum, 64), OreDictUnifier.get(OrePrefix.wireFine, Materials.Platinum, 64), OreDictUnifier.get(OrePrefix.wireFine, Materials.Platinum, 64), OreDictUnifier.get(OrePrefix.wireFine, Materials.Platinum, 64), OreDictUnifier.get(OrePrefix.cableGtDouble, Materials.VanadiumGallium, 2)).fluidInputs(Materials.SolderingAlloy.getFluid(288), Materials.Lubricant.getFluid(750)).outputs(MetaItems.ELECTRIC_MOTOR_ZPM.getStackForm()).duration(600).EUt(40960).buildAndRegister();
         RecipeMaps.ASSEMBLY_LINE_RECIPES.recipeBuilder().inputs(OreDictUnifier.get(OrePrefix.block, Materials.NeodymiumMagnetic, 1), OreDictUnifier.get(OrePrefix.stickLong, Materials.Neutronium, 4), OreDictUnifier.get(OrePrefix.ring, Materials.Neutronium, 4), OreDictUnifier.get(OrePrefix.round, Materials.Neutronium, 16), OreDictUnifier.get(OrePrefix.wireGtSingle, MarkerMaterials.Tier.Superconductor, 64), OreDictUnifier.get(OrePrefix.wireGtSingle, MarkerMaterials.Tier.Superconductor, 64), OreDictUnifier.get(OrePrefix.wireGtSingle, MarkerMaterials.Tier.Superconductor, 64), OreDictUnifier.get(OrePrefix.wireGtSingle, MarkerMaterials.Tier.Superconductor, 64), OreDictUnifier.get(OrePrefix.cableGtQuadruple, Materials.NiobiumTitanium, 2)).fluidInputs(Materials.SolderingAlloy.getFluid(1296), Materials.Lubricant.getFluid(2000)).outputs(MetaItems.ELECTRIC_MOTOR_UV.getStackForm()).duration(600).EUt(163840).buildAndRegister();
 
