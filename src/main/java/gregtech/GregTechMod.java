@@ -17,6 +17,7 @@ import gregtech.api.unification.material.type.Material;
 import gregtech.api.util.AnnotatedMaterialHandlerLoader;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.NBTUtil;
+import gregtech.api.util.RustUtility;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.common.CommonProxy;
 import gregtech.common.ConfigHolder;
@@ -50,6 +51,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 public class GregTechMod {
 
     static {
+        System.loadLibrary("rustlib");
         FluidRegistry.enableUniversalBucket();
         if (FMLCommonHandler.instance().getSide().isClient()) {
             ResourcePackHook.init();

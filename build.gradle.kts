@@ -130,12 +130,19 @@ dependencies {
     "deobfCompile"("mcjty.theoneprobe:TheOneProbe-$shortVersion:$shortVersion-$topVersion")
     "deobfCompile"("team.chisel.ctm:CTM:MC$mcVersion-$ctmVersion")
 
+    "compile"("com.github.jnr:jnr-ffi:2.0.2")
     "testImplementation"("junit:junit:4.13.1")
 }
 
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks {
+    named<JavaExec>("runClient") {
+        systemProperty("java.library.path", this.project.file("src/main/rust/rustlib/target/debug").absolutePath)
+    }
 }
 
 val processResources: ProcessResources by tasks

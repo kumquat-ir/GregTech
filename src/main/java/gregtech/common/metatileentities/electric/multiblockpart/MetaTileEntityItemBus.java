@@ -13,6 +13,8 @@ import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.render.SimpleOverlayRenderer;
 import gregtech.api.render.Textures;
+import gregtech.api.util.GTLog;
+import gregtech.api.util.RustUtility;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -43,6 +45,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockPart implemen
     @Override
     public void update() {
         super.update();
+        GTLog.logger.info(RustUtility.hello("from Rust"));
         if (!getWorld().isRemote && getOffsetTimer() % 5 == 0) {
             if (isExportHatch) {
                 pushItemsIntoNearbyHandlers(getFrontFacing());
