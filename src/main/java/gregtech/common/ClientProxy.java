@@ -220,6 +220,19 @@ public class ClientProxy extends CommonProxy {
         }
     }
 
+    @SubscribeEvent
+    public static void dataStickTooltipHandler(ItemTooltipEvent event) {
+        ItemStack itemStack = event.getItemStack();
+
+        if (ItemNBTUtils.hasTag(itemStack)) {
+            NBTTagCompound nbtTagCompound = itemStack.getTagCompound();
+            String tag = nbtTagCompound.getString("assemblyline");
+            if (!tag.equals("")) {
+                event.getToolTip().add(1, ChatFormatting.YELLOW.toString() + I18n.format("gregtech.data.construction_data", I18n.format(tag)));
+            }
+        }
+    }
+
     private static final Set<UUID> capeHoldersUUIDs = new HashSet<>();
 
     private static void startCapeLoadingThread() {

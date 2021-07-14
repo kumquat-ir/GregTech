@@ -67,7 +67,7 @@ public class Materials {
     public static IngotMaterial Dysprosium = new IngotMaterial(30, "dysprosium", 0xFFFFFF, METALLIC, 2, of(), 0, Elements.get("Dysprosium"), 1680);
     public static IngotMaterial Einsteinium = new IngotMaterial(31, "einsteinium", 0xCE9F00, METALLIC, 3, of(), EXT2_METAL, Elements.get("Einsteinium"));
     public static IngotMaterial Erbium = new IngotMaterial(32, "erbium", 0xFFFFFF, METALLIC, 2, of(), STD_METAL, Elements.get("Erbium"), 1802);
-    public static IngotMaterial Europium = new IngotMaterial(33, "europium", 0xFFFFFF, METALLIC, 2, of(), STD_METAL | GENERATE_ROD, Elements.get("Europium"), 1099);
+    public static IngotMaterial Europium = new IngotMaterial(33, "europium", 0xFFFFFF, METALLIC, 2, of(), STD_METAL | GENERATE_ROD | GENERATE_FOIL, Elements.get("Europium"), 1099);
     public static IngotMaterial Fermium = new IngotMaterial(34, "fermium", 0x984ACF, METALLIC, 3, of(), EXT2_METAL, Elements.get("Fermium"));
     public static IngotMaterial Flerovium = new IngotMaterial(35, "flerovium", 0xFFFFFF, SHINY, 3, of(), EXT2_METAL, Elements.get("Flerovium"));
     public static FluidMaterial Fluorine = new FluidMaterial(36, "fluorine", 0xFFFFFF, GAS, of(), STATE_GAS, Elements.get("Fluorine")).setFluidTemperature(253);

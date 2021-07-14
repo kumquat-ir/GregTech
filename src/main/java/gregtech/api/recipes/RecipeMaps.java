@@ -658,7 +658,7 @@ public class RecipeMaps {
         .setProgressBar(GuiTextures.PROGRESS_BAR_UNPACKER, MoveType.HORIZONTAL);
 
     @ZenProperty
-    public static final RecipeMapAssemblyLine<SimpleRecipeBuilder> ASSEMBLY_LINE_RECIPES = new RecipeMapAssemblyLine<>("assembly_line", 4, 16, 1, 1, 0, 4, 0, 0, new SimpleRecipeBuilder(), false)
+    public static final RecipeMapAssemblyLine<AssemblyLineRecipeBuilder> ASSEMBLY_LINE_RECIPES = new RecipeMapAssemblyLine<>("assembly_line", 4, 16, 1, 1, 0, 4, 0, 0, 1, new AssemblyLineRecipeBuilder())
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, MoveType.HORIZONTAL);
 
     @ZenProperty
@@ -685,7 +685,7 @@ public class RecipeMaps {
             .setProgressBar(GuiTextures.PROGRESS_BAR_REPLICATOR, MoveType.HORIZONTAL);
 
     @ZenProperty
-    public static final RecipeMap<SimpleRecipeBuilder> SCANNER_RECIPES = new RecipeMap<>("scanner", 0, 2, 1, 1, 0, 1, 0, 0, new SimpleRecipeBuilder(), false)
+    public static final RecipeMap<ScannerRecipeBuilder> SCANNER_RECIPES = new RecipeMap<>("scanner", 0, 2, 1, 1, 0, 1, 0, 0, new ScannerRecipeBuilder().EUt(30), false)
             .setSlotOverlay(false, false, GuiTextures.DATA_ORB_OVERLAY)
             .setSlotOverlay(false, false, true, GuiTextures.SCANNER_OVERLAY)
             .setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, MoveType.HORIZONTAL);

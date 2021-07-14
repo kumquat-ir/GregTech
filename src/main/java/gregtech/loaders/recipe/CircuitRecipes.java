@@ -575,8 +575,8 @@ public class CircuitRecipes {
         // Neutron Reflector TODO Move out of here
         ASSEMBLER_RECIPES.recipeBuilder().duration(4000).EUt(120)
                 .input(PLATE_IRIDIUM_ALLOY)
-                .input(plateDouble, Beryllium, 16)
-                .input(plateDouble, TungstenCarbide, 2)
+                .input(plate, Beryllium, 16)
+                .input(plate, TungstenCarbide, 2)
                 .fluidInputs(TinAlloy.getFluid(L * 32))
                 .output(NEUTRON_REFLECTOR)
                 .buildAndRegister();
@@ -1288,6 +1288,7 @@ public class CircuitRecipes {
                 .input(ADVANCED_SMD_DIODE, 8)
                 .fluidInputs(SolderingAlloy.getFluid(L * 10))
                 .output(CRYSTAL_MAINFRAME_UV)
+                .noResearch()
                 .buildAndRegister();
 
         // T7: Wetware =================================================================================================
@@ -1348,6 +1349,7 @@ public class CircuitRecipes {
                 .input(plate, Europium, 4)
                 .fluidInputs(SolderingAlloy.getFluid(1152))
                 .output(WETWARE_SUPER_COMPUTER_UV)
+                .noResearch()
                 .buildAndRegister();
 
         // UHV
@@ -1365,6 +1367,7 @@ public class CircuitRecipes {
                 .fluidInputs(SolderingAlloy.getFluid(L * 20))
                 .fluidInputs(Polybenzimidazole.getFluid(L * 8))
                 .output(WETWARE_MAINFRAME_UHV)
+                .researchItem(WETWARE_SUPER_COMPUTER_UV.getStackForm())
                 .buildAndRegister();
 
         // Misc ========================================================================================================
@@ -1420,22 +1423,7 @@ public class CircuitRecipes {
                 .input(wireFine, Platinum, 64)
                 .fluidInputs(SolderingAlloy.getFluid(L * 5))
                 .output(ENERGY_LAPOTRONIC_ORB2)
-                .buildAndRegister();
-
-        ASSEMBLY_LINE_RECIPES.recipeBuilder().EUt(80000).duration(500)
-                .input(MULTILAYER_FIBER_BOARD)
-                .input(foil, Europium, 32)
-                .input(circuit, Tier.Master, 4)
-                .input(ENGRAVED_LAPOTRON_CHIP, 36)
-                .input(ENGRAVED_LAPOTRON_CHIP, 36)
-                .input(HIGH_POWER_INTEGRATED_CIRCUIT, 64)
-                .input(ADVANCED_SMD_DIODE, 8)
-                .input(ADVANCED_SMD_CAPACITOR, 8)
-                .input(ADVANCED_SMD_RESISTOR, 8)
-                .input(ADVANCED_SMD_TRANSISTOR, 8)
-                .input(wireFine, Platinum, 64)
-                .fluidInputs(SolderingAlloy.getFluid(L * 5))
-                .output(ENERGY_LAPOTRONIC_ORB2)
+                .noResearch()
                 .buildAndRegister();
     }
 }

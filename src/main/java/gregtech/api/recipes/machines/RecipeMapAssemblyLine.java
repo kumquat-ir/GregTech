@@ -31,7 +31,7 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
 
     @Override
     public ModularUI.Builder createUITemplate(DoubleSupplier progressSupplier, IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems, FluidTankList importFluids, FluidTankList exportFluids) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder();
+        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 176);
         builder.widget(new ImageWidget(62 + 18, 1, 72, 72)
                 .setImage(TextureArea.fullImage("textures/gui/icon/assembly_line.png")));
         this.addInventorySlotGroup(builder, importItems, importFluids, false);
