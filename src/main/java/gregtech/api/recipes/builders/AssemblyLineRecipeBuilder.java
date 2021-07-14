@@ -1,16 +1,15 @@
 package gregtech.api.recipes.builders;
 
 import com.google.common.collect.ImmutableMap;
-import gregtech.api.recipes.Recipe;
-import gregtech.api.recipes.RecipeBuilder;
-import gregtech.api.recipes.RecipeMap;
-import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.*;
 import gregtech.api.recipes.recipeproperties.AssemblyLineResearchProperty;
 import gregtech.api.util.EnumValidationResult;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.ValidationResult;
 import gregtech.common.items.MetaItems;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeBuilder> {
@@ -37,10 +36,11 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
 
     @Override
     public boolean applyProperty(String key, Object value) {
-        if (key.equals("no_research")) {
-            noResearch();
-            return true;
-        }
+        //todo handle no research such that items don't go in data slot
+//        if (key.equals("no_research")) {
+//            noResearch();
+//            return true;
+//        }
         if (key.equals("research")) {
             researchItem((ItemStack) value);
             return true;
@@ -48,20 +48,31 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
         return false;
     }
 
-    @ZenMethod
-    public AssemblyLineRecipeBuilder noResearch() {
-        this.hasResearch = false;
-        return this;
-    }
+    //todo handle no research such that items don't go in data slot
+//    @ZenMethod
+//    public AssemblyLineRecipeBuilder noResearch() {
+//        this.hasResearch = false;
+//        return this;
+//    }
 
     @ZenMethod
     public AssemblyLineRecipeBuilder researchItem(ItemStack researchItem) {
         this.hasResearch = true;
-        if (hasResearch && researchItem == null) {
+        if (researchItem == null) {
             GTLog.logger.error("Assemblyline research data cannot be null", new IllegalArgumentException());
             recipeStatus = EnumValidationResult.INVALID;
         }
         this.researchItem = researchItem;
+
+        NBTTagCompound nbtTagCompound = new NBTTagCompound();
+        nbtTagCompound.setString("assemblyline", this.outputs.get(0).getDisplayName());
+
+        ItemStack itemStack = MetaItems.TOOL_DATA_STICK.getStackForm();
+        itemStack.setTagCompound(nbtTagCompound);
+
+        CountableIngredient ci = CountableIngredient.from(itemStack, 0);
+        this.inputs.add(0, ci);
+//        this.notConsumable(itemStack);
         return this;
     }
 
@@ -69,6 +80,7 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
     public ValidationResult<Recipe> build() {
         Recipe recipe = new Recipe(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs,
                 duration, EUt, hidden);
+
         if (hasResearch && !recipe.getRecipePropertyStorage().store(ImmutableMap.of(AssemblyLineResearchProperty.getInstance(), hasResearch))) {
             return ValidationResult.newResult(EnumValidationResult.INVALID, recipe);
         }
@@ -86,7 +98,16 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
                     .outputs(MetaItems.TOOL_DATA_STICK.getStackForm())
                     .buildAndRegister();
         }
+        //todo make items not go in data stick slot
 
         super.buildAndRegister();
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .appendSuper(super.toString())
+                .append(AssemblyLineResearchProperty.getInstance().getKey(), hasResearch)
+                .toString();
     }
 }

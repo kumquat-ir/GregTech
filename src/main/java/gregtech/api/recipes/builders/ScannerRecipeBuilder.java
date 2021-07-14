@@ -44,6 +44,7 @@ public class ScannerRecipeBuilder extends RecipeBuilder<ScannerRecipeBuilder> {
         return false;
     }
 
+    //todo make scanner output a fake corresponding assemblyline output item
     @ZenMethod
     public ScannerRecipeBuilder scanData(String nbtTag) {
         if (nbtTag == null) {

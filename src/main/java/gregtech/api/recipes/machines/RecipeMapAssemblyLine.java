@@ -5,7 +5,6 @@ import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
@@ -14,19 +13,9 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import java.util.function.DoubleSupplier;
 
 public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap<R> {
-    private TextureArea progressBarTexture;
-    private ProgressWidget.MoveType moveType;
 
     public RecipeMapAssemblyLine(String unlocalizedName, int minInputs, int maxInputs, int minOutputs, int maxOutputs, int minFluidInputs, int maxFluidInputs, int minFluidOutputs, int maxFluidOutputs, R defaultRecipe, boolean isHidden) {
         super(unlocalizedName, minInputs, maxInputs, minOutputs, maxOutputs, minFluidInputs, maxFluidInputs, minFluidOutputs, maxFluidOutputs, defaultRecipe, isHidden);
-    }
-
-    @Override
-    public RecipeMapAssemblyLine<R> setProgressBar(TextureArea progressBar, ProgressWidget.MoveType moveType) {
-        this.progressBarTexture = progressBar;
-        this.moveType = moveType;
-        super.setProgressBar(progressBar, moveType);
-        return this;
     }
 
     @Override
@@ -57,11 +46,10 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
         int startInputsY = 37 - (int) (itemSlotsToDown / 2.0 * 18);
 
         if (!isOutputs) {
-            // TODO make data item always appear in this slot
-            addDataSlot(builder, startInputsX + 18 * 7, 1 + 18 * 2, 17, itemHandler); // Data Slot
+            addDataSlot(builder, startInputsX + 18 * 7, 1 + 18 * 2, 0, itemHandler); // Data Slot
             for (int i = 0; i < itemSlotsToDown; i++) {
                 for (int j = 0; j < itemSlotsToLeft; j++) {
-                    int slotIndex = i * itemSlotsToLeft + j;
+                    int slotIndex = i * itemSlotsToLeft + j + 1;
                     addSlot(builder, startInputsX + 18 * j, startInputsY + 18 * i, slotIndex, itemHandler, fluidHandler, invertFluids, isOutputs);
                 }
             }
@@ -80,7 +68,6 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
 
     protected void addDataSlot(ModularUI.Builder builder, int x, int y, int slotIndex, IItemHandlerModifiable itemHandler) {
         builder.widget((new SlotWidget(itemHandler, slotIndex, x, y, true, true)).setBackgroundTexture(GuiTextures.SLOT, GuiTextures.DATA_ORB_OVERLAY));
-
     }
 
     protected static int[] determineSlotsGrid(int itemInputsCount) {

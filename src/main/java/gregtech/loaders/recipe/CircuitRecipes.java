@@ -1288,7 +1288,7 @@ public class CircuitRecipes {
                 .input(ADVANCED_SMD_DIODE, 8)
                 .fluidInputs(SolderingAlloy.getFluid(L * 10))
                 .output(CRYSTAL_MAINFRAME_UV)
-                .noResearch()
+                .researchItem(CRYSTAL_COMPUTER_ZPM.getStackForm())
                 .buildAndRegister();
 
         // T7: Wetware =================================================================================================
@@ -1349,7 +1349,7 @@ public class CircuitRecipes {
                 .input(plate, Europium, 4)
                 .fluidInputs(SolderingAlloy.getFluid(1152))
                 .output(WETWARE_SUPER_COMPUTER_UV)
-                .noResearch()
+                .researchItem(WETWARE_PROCESSOR_ASSEMBLY_ZPM.getStackForm())
                 .buildAndRegister();
 
         // UHV
@@ -1423,7 +1423,7 @@ public class CircuitRecipes {
                 .input(wireFine, Platinum, 64)
                 .fluidInputs(SolderingAlloy.getFluid(L * 5))
                 .output(ENERGY_LAPOTRONIC_ORB2)
-                .noResearch()
+                .researchItem(ENERGY_LAPOTRONIC_ORB.getStackForm())
                 .buildAndRegister();
     }
 }
