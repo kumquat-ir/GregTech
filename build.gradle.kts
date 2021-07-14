@@ -141,7 +141,7 @@ configure<JavaPluginConvention> {
 
 tasks {
     named<JavaExec>("runClient") {
-        systemProperty("java.library.path", this.project.file("src/main/rust/rustlib/target/debug").absolutePath)
+        systemProperty("java.library.path", this.project.file("src/main/rust/target/debug").absolutePath)
     }
 }
 

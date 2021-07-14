@@ -44,6 +44,9 @@ import net.minecraftforge.fml.common.Optional.Method;
 import net.minecraftforge.fml.common.event.*;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
+import java.io.File;
+import java.lang.reflect.Field;
+
 @Mod(modid = GTValues.MODID,
         name = "GregTech",
         acceptedMinecraftVersions = "[1.12,1.13)",
@@ -51,6 +54,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 public class GregTechMod {
 
     static {
+        //GregTechMod.setRustPath();
         System.loadLibrary("rustlib");
         FluidRegistry.enableUniversalBucket();
         if (FMLCommonHandler.instance().getSide().isClient()) {
@@ -59,6 +63,18 @@ public class GregTechMod {
             BlockCompressedFactory.init();
             BlockFrameFactory.init();
         }
+    }
+
+    private static void setRustPath() {
+        System.setProperty(
+                "java.library.path",
+                new File("src/main/rust/target/debug").getAbsolutePath() // TODO change this when natives are in jar
+        );
+        try {
+            Field sysPath = ClassLoader.class.getDeclaredField("sys_paths");
+            sysPath.setAccessible(true);
+            sysPath.set(null, null);
+        } catch (Exception ignored) {}
     }
 
     @Mod.Instance(GTValues.MODID)
