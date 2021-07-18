@@ -11,7 +11,7 @@ import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.MultiblockRecipeLogic;
-import gregtech.api.multiblock.PatternMatchContext;
+import gregtech.api.multiblock.IPatternMatchContext;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
@@ -75,7 +75,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     }
 
     @Override
-    protected void formStructure(PatternMatchContext context) {
+    protected void formStructure(IPatternMatchContext context) {
         super.formStructure(context);
         initializeAbilities();
     }

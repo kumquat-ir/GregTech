@@ -9,7 +9,7 @@ import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.multiblock.BlockPattern;
 import gregtech.api.multiblock.FactoryBlockPattern;
-import gregtech.api.multiblock.PatternMatchContext;
+import gregtech.api.multiblock.IPatternMatchContext;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.machines.FuelRecipeMap;
 import gregtech.api.render.ICubeRenderer;
@@ -77,7 +77,7 @@ public class MetaTileEntityLargeTurbine extends RotorHolderMultiblockController 
     }
 
     @Override
-    protected void formStructure(PatternMatchContext context) {
+    protected void formStructure(IPatternMatchContext context) {
         super.formStructure(context);
         this.exportFluidHandler = new FluidTankList(true, getAbilities(MultiblockAbility.EXPORT_FLUIDS));
     }

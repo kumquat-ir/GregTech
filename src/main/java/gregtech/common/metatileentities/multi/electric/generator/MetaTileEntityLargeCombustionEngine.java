@@ -7,7 +7,7 @@ import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.multiblock.BlockPattern;
-import gregtech.api.multiblock.BlockWorldState;
+import gregtech.api.multiblock.IBlockWorldState;
 import gregtech.api.multiblock.FactoryBlockPattern;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.render.ICubeRenderer;
@@ -63,7 +63,7 @@ public class MetaTileEntityLargeCombustionEngine extends FueledMultiblockControl
         super.addDisplayText(textList);
     }
 
-    protected Predicate<BlockWorldState> intakeCasingPredicate() {
+    protected Predicate<IBlockWorldState> intakeCasingPredicate() {
         IBlockState blockState = MetaBlocks.MULTIBLOCK_CASING.getState(MultiblockCasingType.ENGINE_INTAKE_CASING);
         return blockWorldState -> {
             if (blockWorldState.getBlockState() != blockState)

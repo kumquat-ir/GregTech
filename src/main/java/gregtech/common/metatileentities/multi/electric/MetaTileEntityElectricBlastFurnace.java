@@ -7,10 +7,7 @@ import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
-import gregtech.api.multiblock.BlockPattern;
-import gregtech.api.multiblock.BlockWorldState;
-import gregtech.api.multiblock.FactoryBlockPattern;
-import gregtech.api.multiblock.PatternMatchContext;
+import gregtech.api.multiblock.*;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.recipeproperties.BlastTemperatureProperty;
@@ -69,7 +66,7 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
     }
 
     @Override
-    protected void formStructure(PatternMatchContext context) {
+    protected void formStructure(IPatternMatchContext context) {
         super.formStructure(context);
         this.blastFurnaceTemperature = context.getOrDefault("CoilType", CoilType.CUPRONICKEL).getCoilTemperature();
 
@@ -89,7 +86,7 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
         return this.blastFurnaceTemperature >= recipeRequiredTemp;
     }
 
-    public static Predicate<BlockWorldState> heatingCoilPredicate() {
+    public static Predicate<IBlockWorldState> heatingCoilPredicate() {
         return blockWorldState -> {
             IBlockState blockState = blockWorldState.getBlockState();
             if (!(blockState.getBlock() instanceof BlockWireCoil))

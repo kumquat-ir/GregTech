@@ -12,7 +12,7 @@ import gregtech.api.metatileentity.MTETrait;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
-import gregtech.api.multiblock.PatternMatchContext;
+import gregtech.api.multiblock.IPatternMatchContext;
 import gregtech.api.recipes.machines.FuelRecipeMap;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -56,7 +56,7 @@ public abstract class FueledMultiblockController extends MultiblockWithDisplayBa
     }
 
     @Override
-    protected void formStructure(PatternMatchContext context) {
+    protected void formStructure(IPatternMatchContext context) {
         super.formStructure(context);
         initializeAbilities();
     }

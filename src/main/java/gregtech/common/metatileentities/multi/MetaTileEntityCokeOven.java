@@ -14,7 +14,7 @@ import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.multiblock.BlockPattern;
-import gregtech.api.multiblock.BlockWorldState;
+import gregtech.api.multiblock.IBlockWorldState;
 import gregtech.api.multiblock.FactoryBlockPattern;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.recipes.CokeOvenRecipe;
@@ -241,7 +241,7 @@ public class MetaTileEntityCokeOven extends MultiblockControllerBase {
 
     @Override
     protected BlockPattern createStructurePattern() {
-        Predicate<BlockWorldState> hatchPredicate = tilePredicate((state, tile) -> tile instanceof MetaTileEntityCokeOvenHatch);
+        Predicate<IBlockWorldState> hatchPredicate = tilePredicate((state, tile) -> tile instanceof MetaTileEntityCokeOvenHatch);
         return FactoryBlockPattern.start()
             .aisle("XXX", "XZX", "XXX")
             .aisle("XZX", "Z#Z", "XZX")

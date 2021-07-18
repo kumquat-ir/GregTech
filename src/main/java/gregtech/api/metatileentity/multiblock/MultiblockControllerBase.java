@@ -8,10 +8,7 @@ import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IMultiblockController;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
-import gregtech.api.multiblock.BlockPattern;
-import gregtech.api.multiblock.BlockWorldState;
-import gregtech.api.multiblock.IPatternCenterPredicate;
-import gregtech.api.multiblock.PatternMatchContext;
+import gregtech.api.multiblock.*;
 import gregtech.api.render.ICubeRenderer;
 import gregtech.api.render.OrientedOverlayRenderer;
 import gregtech.api.render.Textures;
@@ -105,7 +102,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
         return getLightValueForPart(null);
     }
 
-    public static Predicate<BlockWorldState> tilePredicate(BiFunction<BlockWorldState, MetaTileEntity, Boolean> predicate) {
+    public static Predicate<IBlockWorldState> tilePredicate(BiFunction<IBlockWorldState, MetaTileEntity, Boolean> predicate) {
         return blockWorldState -> {
             TileEntity tileEntity = blockWorldState.getTileEntity();
             if (!(tileEntity instanceof MetaTileEntityHolder))
@@ -122,32 +119,32 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
         };
     }
 
-    public static Predicate<BlockWorldState> abilityPartPredicate(MultiblockAbility<?>... allowedAbilities) {
+    public static Predicate<IBlockWorldState> abilityPartPredicate(MultiblockAbility<?>... allowedAbilities) {
         return tilePredicate((state, tile) -> tile instanceof IMultiblockAbilityPart<?> &&
             ArrayUtils.contains(allowedAbilities, ((IMultiblockAbilityPart<?>) tile).getAbility()));
     }
 
-    public static Predicate<BlockWorldState> partPredicate(Class<? extends IMultiblockPart> baseClass) {
+    public static Predicate<IBlockWorldState> partPredicate(Class<? extends IMultiblockPart> baseClass) {
         return tilePredicate((state, tile) -> tile instanceof IMultiblockPart && baseClass.isAssignableFrom(tile.getClass()));
     }
 
-    public static Predicate<BlockWorldState> statePredicate(IBlockState... allowedStates) {
+    public static Predicate<IBlockWorldState> statePredicate(IBlockState... allowedStates) {
         return blockWorldState -> ArrayUtils.contains(allowedStates, blockWorldState.getBlockState());
     }
 
-    public static Predicate<BlockWorldState> blockPredicate(Block... block) {
+    public static Predicate<IBlockWorldState> blockPredicate(Block... block) {
         return blockWorldState -> ArrayUtils.contains(block, blockWorldState.getBlockState().getBlock());
     }
 
-    public static Predicate<BlockWorldState> isAirPredicate() {
+    public static Predicate<IBlockWorldState> isAirPredicate() {
         return blockWorldState -> blockWorldState.getBlockState().getBlock().isAir(blockWorldState.getBlockState(), blockWorldState.getWorld(), blockWorldState.getPos());
     }
 
-    public IPatternCenterPredicate selfPredicate() {
-        return BlockWorldState.wrap(tilePredicate((state, tile) -> tile.metaTileEntityId.equals(metaTileEntityId)));
+    public PatternCenterPredicate selfPredicate() {
+        return IBlockWorldState.wrap(tilePredicate((state, tile) -> tile.metaTileEntityId.equals(metaTileEntityId)));
     }
 
-    public Predicate<BlockWorldState> countMatch(String key, Predicate<BlockWorldState> original) {
+    public Predicate<IBlockWorldState> countMatch(String key, Predicate<IBlockWorldState> original) {
         return blockWorldState -> {
             if (original.test(blockWorldState)) {
                 blockWorldState.getLayerContext().increment(key, 1);
@@ -169,7 +166,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
     protected void checkStructurePattern() {
         EnumFacing facing = getFrontFacing().getOpposite();
-        PatternMatchContext context = structurePattern.checkPatternAt(getWorld(), getPos(), facing);
+        IPatternMatchContext context = structurePattern.checkPatternAt(getWorld(), getPos(), facing);
         if (context != null && !structureFormed) {
             Set<IMultiblockPart> rawPartsSet = context.getOrCreate("MultiblockParts", HashSet::new);
             ArrayList<IMultiblockPart> parts = new ArrayList<>(rawPartsSet);
@@ -203,7 +200,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
         }
     }
 
-    protected void formStructure(PatternMatchContext context) {
+    protected void formStructure(IPatternMatchContext context) {
     }
 
     public void invalidateStructure() {

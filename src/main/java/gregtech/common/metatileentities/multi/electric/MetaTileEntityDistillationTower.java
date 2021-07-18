@@ -5,10 +5,7 @@ import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
-import gregtech.api.multiblock.BlockPattern;
-import gregtech.api.multiblock.BlockWorldState;
-import gregtech.api.multiblock.FactoryBlockPattern;
-import gregtech.api.multiblock.PatternMatchContext;
+import gregtech.api.multiblock.*;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.render.ICubeRenderer;
 import gregtech.api.render.OrientedOverlayRenderer;
@@ -52,8 +49,8 @@ public class MetaTileEntityDistillationTower extends RecipeMapMultiblockControll
 
     @Override
     protected BlockPattern createStructurePattern() {
-        Predicate<BlockWorldState> fluidExportPredicate = countMatch("HatchesAmount", abilityPartPredicate(MultiblockAbility.EXPORT_FLUIDS));
-        Predicate<PatternMatchContext> exactlyOneHatch = context -> context.getInt("HatchesAmount") == 1;
+        Predicate<IBlockWorldState> fluidExportPredicate = countMatch("HatchesAmount", abilityPartPredicate(MultiblockAbility.EXPORT_FLUIDS));
+        Predicate<IPatternMatchContext> exactlyOneHatch = context -> context.getOrDefault("HatchesAmount", 0) == 1;
         return FactoryBlockPattern.start(RIGHT, FRONT, UP)
             .aisle("YSY", "YYY", "YYY")
             .aisle("XXX", "X#X", "XXX").setRepeatable(0, 11)

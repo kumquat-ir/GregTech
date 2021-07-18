@@ -49,7 +49,7 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
     }
 
     @Override
-    protected void formStructure(PatternMatchContext context) {
+    protected void formStructure(IPatternMatchContext context) {
         super.formStructure(context);
         CoilType coilType = context.getOrDefault("CoilType", CoilType.CUPRONICKEL);
         this.heatingCoilLevel = coilType.getLevel();
