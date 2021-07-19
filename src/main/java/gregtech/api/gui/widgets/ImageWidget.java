@@ -41,6 +41,10 @@ public class ImageWidget extends Widget {
         return this;
     }
 
+    public boolean isVisible() {
+        return this.isVisible;
+    }
+
     @Override
     public void detectAndSendChanges() {
         super.detectAndSendChanges();
