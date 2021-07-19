@@ -2,12 +2,18 @@ package gregtech.api.recipes.machines;
 
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.gui.GuiTextures;
+import gregtech.api.gui.IRenderContext;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.ImageWidget;
 import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.util.Position;
+import gregtech.api.util.Size;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import java.util.function.DoubleSupplier;
@@ -21,7 +27,7 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
     @Override
     public ModularUI.Builder createUITemplate(DoubleSupplier progressSupplier, IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems, FluidTankList importFluids, FluidTankList exportFluids) {
         ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 176);
-        builder.widget(new ImageWidget(62 + 18, 1, 72, 72)
+        builder.widget(new AssemblyLineImageWidget(62 + 18, 1, 72, 72)
                 .setImage(TextureArea.fullImage("textures/gui/icon/assembly_line.png")));
         this.addInventorySlotGroup(builder, importItems, importFluids, false);
         this.addInventorySlotGroup(builder, exportItems, exportFluids, true);
@@ -89,5 +95,22 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
             itemSlotsToLeft = 4;
         }
         return new int[] { itemSlotsToLeft, itemSlotsToDown };
+    }
+
+    private static class AssemblyLineImageWidget extends ImageWidget {
+
+        public AssemblyLineImageWidget(int xPosition, int yPosition, int width, int height) {
+            super(xPosition, yPosition, width, height);
+        }
+
+        @Override
+        @SideOnly(Side.CLIENT)
+        public void drawInBackground(int mouseX, int mouseY, IRenderContext context) {
+            if (!this.isVisible() || area == null) return;
+            Position position = getPosition();
+            Size size = getSize();
+            area.draw(position.x, position.y, size.width, size.height);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
 }
