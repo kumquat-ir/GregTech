@@ -46,7 +46,10 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
         int startInputsY = 37 - (int) (itemSlotsToDown / 2.0 * 18);
 
         if (!isOutputs) {
-            addDataSlot(builder, startInputsX + 18 * 7, 1 + 18 * 2, 0, itemHandler); // Data Slot
+            // data slot
+            builder.widget((new SlotWidget(itemHandler, 0, startInputsX + 18 * 7, 1 + 18 * 2, true, true))
+                    .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.DATA_ORB_OVERLAY));
+
             for (int i = 0; i < itemSlotsToDown; i++) {
                 for (int j = 0; j < itemSlotsToLeft; j++) {
                     int slotIndex = i * itemSlotsToLeft + j + 1;
@@ -64,10 +67,6 @@ public class RecipeMapAssemblyLine<R extends RecipeBuilder<R>> extends RecipeMap
         } else {
             addSlot(builder, startInputsX + 18 * 4, 1, 18, itemHandler, fluidHandler, invertFluids, isOutputs); // Output Slot
         }
-    }
-
-    protected void addDataSlot(ModularUI.Builder builder, int x, int y, int slotIndex, IItemHandlerModifiable itemHandler) {
-        builder.widget((new SlotWidget(itemHandler, slotIndex, x, y, true, true)).setBackgroundTexture(GuiTextures.SLOT, GuiTextures.DATA_ORB_OVERLAY));
     }
 
     protected static int[] determineSlotsGrid(int itemInputsCount) {
