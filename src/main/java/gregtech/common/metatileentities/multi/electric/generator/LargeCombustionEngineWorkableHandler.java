@@ -18,9 +18,12 @@ public class LargeCombustionEngineWorkableHandler extends FuelRecipeLogic {
     private int currentCycle = 0;
     private boolean isUsingOxygen = false;
 
+    private final boolean isMk2;
+
     public LargeCombustionEngineWorkableHandler(MetaTileEntity metaTileEntity, FuelRecipeMap recipeMap,
-                                                Supplier<IEnergyContainer> energyContainer, Supplier<IMultipleTankHandler> fluidTank, long maxVoltage) {
+                                                Supplier<IEnergyContainer> energyContainer, Supplier<IMultipleTankHandler> fluidTank, long maxVoltage, boolean isMk2) {
         super(metaTileEntity, recipeMap, energyContainer, fluidTank, maxVoltage);
+        this.isMk2 = isMk2;
     }
 
     public FluidStack getFuelStack() {

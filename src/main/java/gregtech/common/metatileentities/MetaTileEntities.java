@@ -126,6 +126,7 @@ public class MetaTileEntities {
     public static MetaTileEntityCrackingUnit CRACKER;
     public static MetaTileEntityMultiFurnace MULTI_FURNACE;
     public static MetaTileEntityLargeCombustionEngine LARGE_COMBUSTION_ENGINE;
+    public static MetaTileEntityLargeCombustionEngine EXTREME_COMBUSTION_ENGINE;
 
     public static MetaTileEntityLargeTurbine LARGE_STEAM_TURBINE;
     public static MetaTileEntityLargeTurbine LARGE_GAS_TURBINE;
@@ -437,7 +438,7 @@ public class MetaTileEntities {
         DISTILLATION_TOWER = GregTechAPI.registerMetaTileEntity(1005, new MetaTileEntityDistillationTower(gregtechId("distillation_tower")));
         MULTI_FURNACE = GregTechAPI.registerMetaTileEntity(1006, new MetaTileEntityMultiFurnace(gregtechId("multi_furnace")));
         LARGE_COMBUSTION_ENGINE = GregTechAPI.registerMetaTileEntity(1007, new MetaTileEntityLargeCombustionEngine(gregtechId("large_combustion_engine")));
-        CRACKER = GregTechAPI.registerMetaTileEntity(1008, new MetaTileEntityCrackingUnit(gregtechId("cracker")));
+        EXTREME_COMBUSTION_ENGINE = GregTechAPI.registerMetaTileEntity(1008, new MetaTileEntityLargeCombustionEngine(gregtechId("extreme_combustion_engine"), true));
 
         LARGE_STEAM_TURBINE = GregTechAPI.registerMetaTileEntity(1009, new MetaTileEntityLargeTurbine(gregtechId("large_turbine.steam"), TurbineType.STEAM));
         LARGE_GAS_TURBINE = GregTechAPI.registerMetaTileEntity(1010, new MetaTileEntityLargeTurbine(gregtechId("large_turbine.gas"), TurbineType.GAS));
@@ -457,6 +458,7 @@ public class MetaTileEntities {
         FUSION_REACTOR[2] = GregTechAPI.registerMetaTileEntity(1021, new MetaTileEntityFusionReactor(gregtechId("fusion_reactor.uv"), 8));
 
         LARGE_CHEMICAL_REACTOR = GregTechAPI.registerMetaTileEntity(1022, new MetaTileEntityLargeChemicalReactor(gregtechId("large_chemical_reactor")));
+        CRACKER = GregTechAPI.registerMetaTileEntity(1023, new MetaTileEntityCrackingUnit(gregtechId("cracker")));
 
         // MISC MTE's START: IDs 1300-2000
 

@@ -23,6 +23,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fluids.FluidStack;
+import scala.Int;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -30,25 +31,33 @@ import java.util.function.Predicate;
 
 public class MetaTileEntityLargeCombustionEngine extends FueledMultiblockController {
 
+    private final boolean isMk2;
+
     public MetaTileEntityLargeCombustionEngine(ResourceLocation metaTileEntityId) {
-        super(metaTileEntityId, RecipeMaps.COMBUSTION_GENERATOR_FUELS, GTValues.V[GTValues.EV]);
+        this(metaTileEntityId, false);
+    }
+
+    public MetaTileEntityLargeCombustionEngine(ResourceLocation metaTileEntityId, boolean isMk2) {
+        super(metaTileEntityId, RecipeMaps.COMBUSTION_GENERATOR_FUELS, GTValues.V[isMk2 ? GTValues.IV : GTValues.EV]);
+        this.isMk2 = isMk2;
     }
 
     @Override
     protected FuelRecipeLogic createWorkable(long maxVoltage) {
-        return new LargeCombustionEngineWorkableHandler(this, recipeMap, () -> energyContainer, () -> importFluidHandler, maxVoltage);
+        return new LargeCombustionEngineWorkableHandler(this, recipeMap, () -> energyContainer, () -> importFluidHandler, maxVoltage, isMk2);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(MetaTileEntityHolder holder) {
-        return new MetaTileEntityLargeCombustionEngine(metaTileEntityId);
+        return new MetaTileEntityLargeCombustionEngine(metaTileEntityId, isMk2);
     }
 
-    @Override
+    @Override // todo
     protected void addDisplayText(List<ITextComponent> textList) {
         if (isStructureFormed()) {
             FluidStack lubricantStack = importFluidHandler.drain(Materials.Lubricant.getFluid(Integer.MAX_VALUE), false);
             FluidStack oxygenStack = importFluidHandler.drain(Materials.Oxygen.getFluid(Integer.MAX_VALUE), false);
+            FluidStack loxStack = importFluidHandler.drain(Materials.LiquidOxygen.getFluid(Integer.MAX_VALUE), false);
             FluidStack fuelStack = ((LargeCombustionEngineWorkableHandler) workableHandler).getFuelStack();
             int lubricantAmount = lubricantStack == null ? 0 : lubricantStack.amount;
             int oxygenAmount = oxygenStack == null ? 0 : oxygenStack.amount;
@@ -63,16 +72,6 @@ public class MetaTileEntityLargeCombustionEngine extends FueledMultiblockControl
         super.addDisplayText(textList);
     }
 
-    protected Predicate<BlockWorldState> intakeCasingPredicate() {
-        IBlockState blockState = MetaBlocks.MULTIBLOCK_CASING.getState(MultiblockCasingType.ENGINE_INTAKE_CASING);
-        return blockWorldState -> {
-            if (blockWorldState.getBlockState() != blockState)
-                return false;
-            IBlockState offsetState = blockWorldState.getOffsetState(getFrontFacing());
-            return offsetState.getBlock().isAir(offsetState, blockWorldState.getWorld(), blockWorldState.getPos());
-        };
-    }
-
     @Override
     protected BlockPattern createStructurePattern() {
         return FactoryBlockPattern.start()
@@ -81,7 +80,7 @@ public class MetaTileEntityLargeCombustionEngine extends FueledMultiblockControl
             .aisle("XHX", "HGH", "XHX")
             .aisle("AAA", "AYA", "AAA")
             .where('X', statePredicate(getCasingState()))
-            .where('G', statePredicate(MetaBlocks.TURBINE_CASING.getState(TurbineCasingType.TITANIUM_GEARBOX)))
+            .where('G', statePredicate(gearboxPredicate()))
             .where('H', statePredicate(getCasingState()).or(abilityPartPredicate(MultiblockAbility.IMPORT_FLUIDS)))
             .where('D', abilityPartPredicate(MultiblockAbility.OUTPUT_ENERGY))
             .where('A', intakeCasingPredicate())
@@ -90,12 +89,34 @@ public class MetaTileEntityLargeCombustionEngine extends FueledMultiblockControl
     }
 
     public IBlockState getCasingState() {
-        return MetaBlocks.METAL_CASING.getState(MetalCasingType.TITANIUM_STABLE);
+        return isMk2 ?
+                MetaBlocks.METAL_CASING.getState(MetalCasingType.TUNGSTENSTEEL_ROBUST) :
+                MetaBlocks.METAL_CASING.getState(MetalCasingType.TITANIUM_STABLE);
+    }
+
+    protected Predicate<BlockWorldState> intakeCasingPredicate() {
+        IBlockState blockState = isMk2 ?
+                MetaBlocks.MULTIBLOCK_CASING.getState(MultiblockCasingType.ENGINE_INTAKE_CASING_MK2) :
+                MetaBlocks.MULTIBLOCK_CASING.getState(MultiblockCasingType.ENGINE_INTAKE_CASING);
+        return blockWorldState -> {
+            if (blockWorldState.getBlockState() != blockState)
+                return false;
+            IBlockState offsetState = blockWorldState.getOffsetState(getFrontFacing());
+            return offsetState.getBlock().isAir(offsetState, blockWorldState.getWorld(), blockWorldState.getPos());
+        };
+    }
+
+    protected IBlockState gearboxPredicate() {
+        return isMk2 ?
+                MetaBlocks.TURBINE_CASING.getState(TurbineCasingType.TUNGSTENSTEEL_GEARBOX) :
+                MetaBlocks.TURBINE_CASING.getState(TurbineCasingType.TITANIUM_GEARBOX);
     }
 
     @Override
     public ICubeRenderer getBaseTexture(IMultiblockPart sourcePart) {
-        return Textures.STABLE_TITANIUM_CASING;
+        return isMk2 ?
+                Textures.ROBUST_TUNGSTENSTEEL_CASING :
+                Textures.STABLE_TITANIUM_CASING;
     }
 
     @Nonnull

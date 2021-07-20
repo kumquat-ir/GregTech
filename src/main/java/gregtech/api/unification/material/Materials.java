@@ -431,6 +431,7 @@ public class Materials {
     public static SimpleFluidMaterial EthylTertButylEther = new SimpleFluidMaterial(143, "ethyl_tertbutyl_ether", 0xFFFFFF, FLUID, of(new MaterialStack(Carbon, 6), new MaterialStack(Hydrogen, 14), new MaterialStack(Oxygen, 1)), DISABLE_DECOMPOSITION);
     public static SimpleFluidMaterial HighOctaneGasoline = new SimpleFluidMaterial(144, "gasoline_premium", 0xFFA500, FLUID, of(), DISABLE_DECOMPOSITION);
     public static SimpleFluidMaterial Nitrobenzene = new SimpleFluidMaterial(145, "nitrobenzene", 0x704936, FLUID, of(), DISABLE_DECOMPOSITION);
+    public static SimpleFluidMaterial LiquidOxygen = new SimpleFluidMaterial(146, "liquid_oxygen", 0xA9D0F5, FLUID, of(new MaterialStack(Oxygen, 1)), DISABLE_DECOMPOSITION);
 
     public static SimpleDustMaterial SodiumHydroxide = new SimpleDustMaterial(1, "sodium_hydroxide", 0x003380, DULL, of(new MaterialStack(Sodium, 1), new MaterialStack(Oxygen, 1), new MaterialStack(Hydrogen, 1)), GENERATE_SMALL_TINY);
     public static SimpleDustMaterial MagnesiumChloride = new SimpleDustMaterial(2, "magnesium_chloride", 0xD40D5C, DULL, of(new MaterialStack(Magnesium, 1), new MaterialStack(Chlorine, 2)), GENERATE_SMALL_TINY);
