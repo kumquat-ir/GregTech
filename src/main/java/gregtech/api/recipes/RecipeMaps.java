@@ -8,10 +8,12 @@ import gregtech.api.recipes.builders.*;
 import gregtech.api.recipes.machines.*;
 import gregtech.api.recipes.recipes.CokeOvenRecipe;
 import gregtech.api.recipes.recipes.PrimitiveBlastFurnaceRecipe;
+import net.minecraftforge.fluids.FluidStack;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 import stanhebben.zenscript.annotations.ZenProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -722,6 +724,16 @@ public class RecipeMaps {
     @ZenMethod
     public static List<CokeOvenRecipe> getCokeOvenRecipes() {
         return COKE_OVEN_RECIPES;
+    }
+
+    @ZenProperty
+    public static final List<FluidStack> BOILER_WATER_FLUIDS = new ArrayList<FluidStack>() {{
+        add(ModHandler.getWater(1));
+        add(ModHandler.getDistilledWater(1));
+    }};
+
+    public static List<FluidStack> getBoilerWaterFluids() {
+        return BOILER_WATER_FLUIDS;
     }
 
 }

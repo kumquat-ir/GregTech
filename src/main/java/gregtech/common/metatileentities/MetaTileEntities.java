@@ -11,13 +11,16 @@ import gregtech.api.render.Textures;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTLog;
 import gregtech.common.ConfigHolder;
+import gregtech.common.blocks.BlockBoilerCasing;
+import gregtech.common.blocks.BlockFireboxCasing;
+import gregtech.common.blocks.BlockMetalCasing;
+import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.metatileentities.electric.*;
 import gregtech.common.metatileentities.electric.multiblockpart.MetaTileEntityEnergyHatch;
 import gregtech.common.metatileentities.electric.multiblockpart.MetaTileEntityFluidHatch;
 import gregtech.common.metatileentities.electric.multiblockpart.MetaTileEntityItemBus;
 import gregtech.common.metatileentities.electric.multiblockpart.MetaTileEntityRotorHolder;
 import gregtech.common.metatileentities.multi.*;
-import gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler.BoilerType;
 import gregtech.common.metatileentities.multi.electric.*;
 import gregtech.common.metatileentities.multi.electric.generator.MetaTileEntityLargeCombustionEngine;
 import gregtech.common.metatileentities.multi.electric.generator.MetaTileEntityLargeTurbine;
@@ -131,10 +134,10 @@ public class MetaTileEntities {
     public static MetaTileEntityLargeTurbine LARGE_GAS_TURBINE;
     public static MetaTileEntityLargeTurbine LARGE_PLASMA_TURBINE;
 
-    public static MetaTileEntityLargeBoiler LARGE_BRONZE_BOILER;
-    public static MetaTileEntityLargeBoiler LARGE_STEEL_BOILER;
-    public static MetaTileEntityLargeBoiler LARGE_TITANIUM_BOILER;
-    public static MetaTileEntityLargeBoiler LARGE_TUNGSTENSTEEL_BOILER;
+    public static MetaTileEntityLargeBoilerNew LARGE_BRONZE_BOILER;
+    public static MetaTileEntityLargeBoilerNew LARGE_STEEL_BOILER;
+    public static MetaTileEntityLargeBoilerNew LARGE_TITANIUM_BOILER;
+    public static MetaTileEntityLargeBoilerNew LARGE_TUNGSTENSTEEL_BOILER;
 
     public static MetaTileEntityAssemblyLine ASSEMBLY_LINE;
     public static MetaTileEntityFusionReactor[] FUSION_REACTOR = new MetaTileEntityFusionReactor[3];
@@ -443,10 +446,26 @@ public class MetaTileEntities {
         LARGE_GAS_TURBINE = GregTechAPI.registerMetaTileEntity(1010, new MetaTileEntityLargeTurbine(gregtechId("large_turbine.gas"), TurbineType.GAS));
         LARGE_PLASMA_TURBINE = GregTechAPI.registerMetaTileEntity(1011, new MetaTileEntityLargeTurbine(gregtechId("large_turbine.plasma"), TurbineType.PLASMA));
 
-        LARGE_BRONZE_BOILER = GregTechAPI.registerMetaTileEntity(1012, new MetaTileEntityLargeBoiler(gregtechId("large_boiler.bronze"), BoilerType.BRONZE));
-        LARGE_STEEL_BOILER = GregTechAPI.registerMetaTileEntity(1013, new MetaTileEntityLargeBoiler(gregtechId("large_boiler.steel"), BoilerType.STEEL));
-        LARGE_TITANIUM_BOILER = GregTechAPI.registerMetaTileEntity(1014, new MetaTileEntityLargeBoiler(gregtechId("large_boiler.titanium"), BoilerType.TITANIUM));
-        LARGE_TUNGSTENSTEEL_BOILER = GregTechAPI.registerMetaTileEntity(1015, new MetaTileEntityLargeBoiler(gregtechId("large_boiler.tungstensteel"), BoilerType.TUNGSTENSTEEL));
+        LARGE_BRONZE_BOILER = GregTechAPI.registerMetaTileEntity(1012, new MetaTileEntityLargeBoilerNew(gregtechId("large_boiler.bronze"), new LargeBoilerType(
+                Materials.Bronze, MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.BRONZE_BRICKS), MetaBlocks.BOILER_FIREBOX_CASING.getState(BlockFireboxCasing.FireboxCasingType.BRONZE_FIREBOX),
+                MetaBlocks.BOILER_CASING.getState(BlockBoilerCasing.BoilerCasingType.BRONZE_PIPE), Textures.LARGE_BRONZE_BOILER, Textures.BRONZE_PLATED_BRICKS, Textures.BRONZE_FIREBOX, Textures.BRONZE_FIREBOX_ACTIVE,
+                400, 16, 2.0, 800
+        )));
+        LARGE_STEEL_BOILER = GregTechAPI.registerMetaTileEntity(1013, new MetaTileEntityLargeBoilerNew(gregtechId("large_boiler.steel"), new LargeBoilerType(
+                Materials.Steel, MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.STEEL_SOLID), MetaBlocks.BOILER_FIREBOX_CASING.getState(BlockFireboxCasing.FireboxCasingType.STEEL_FIREBOX),
+                MetaBlocks.BOILER_CASING.getState(BlockBoilerCasing.BoilerCasingType.STEEL_PIPE), Textures.LARGE_STEEL_BOILER, Textures.SOLID_STEEL_CASING, Textures.STEEL_FIREBOX, Textures.STEEL_FIREBOX_ACTIVE,
+                600, 12, 1.5, 1200
+        )));
+        LARGE_TITANIUM_BOILER = GregTechAPI.registerMetaTileEntity(1014, new MetaTileEntityLargeBoilerNew(gregtechId("large_boiler.titanium"), new LargeBoilerType(
+                Materials.Titanium, MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.TITANIUM_STABLE), MetaBlocks.BOILER_FIREBOX_CASING.getState(BlockFireboxCasing.FireboxCasingType.TITANIUM_FIREBOX),
+                MetaBlocks.BOILER_CASING.getState(BlockBoilerCasing.BoilerCasingType.TITANIUM_PIPE), Textures.LARGE_TITANIUM_BOILER, Textures.STABLE_TITANIUM_CASING, Textures.TITANIUM_FIREBOX, Textures.TITANIUM_FIREBOX_ACTIVE,
+                800, 8, 1.3, 1600
+        )));
+        LARGE_TUNGSTENSTEEL_BOILER = GregTechAPI.registerMetaTileEntity(1015, new MetaTileEntityLargeBoilerNew(gregtechId("large_boiler.tungstensteel"), new LargeBoilerType(
+                Materials.TungstenSteel, MetaBlocks.METAL_CASING.getState(BlockMetalCasing.MetalCasingType.TUNGSTENSTEEL_ROBUST), MetaBlocks.BOILER_FIREBOX_CASING.getState(BlockFireboxCasing.FireboxCasingType.TUNGSTENSTEEL_FIREBOX),
+                MetaBlocks.BOILER_CASING.getState(BlockBoilerCasing.BoilerCasingType.TUNGSTENSTEEL_PIPE), Textures.LARGE_TUNGSTENSTEEL_BOILER, Textures.ROBUST_TUNGSTENSTEEL_CASING, Textures.TUNGSTENSTEEL_FIREBOX, Textures.TUNGSTENSTEEL_FIREBOX_ACTIVE,
+                1000, 4, 1.2, 2000
+        )));
 
         COKE_OVEN = GregTechAPI.registerMetaTileEntity(1016, new MetaTileEntityCokeOven(gregtechId("coke_oven")));
         COKE_OVEN_HATCH = GregTechAPI.registerMetaTileEntity(1017, new MetaTileEntityCokeOvenHatch(gregtechId("coke_oven_hatch")));

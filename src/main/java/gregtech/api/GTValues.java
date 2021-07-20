@@ -147,4 +147,6 @@ public class GTValues {
             ConfigHolder.U.machines.highTierMassFabricators ||
             ConfigHolder.U.machines.highTierReplicators ||
             ConfigHolder.U.machines.highTierScanners;
+
+    public static final int STEAM_PER_WATER = 160;
 }

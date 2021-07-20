@@ -8,7 +8,10 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IFuelInfo;
 import gregtech.api.capability.IFuelable;
-import gregtech.api.capability.impl.*;
+import gregtech.api.capability.impl.FluidFuelInfo;
+import gregtech.api.capability.impl.FluidTankList;
+import gregtech.api.capability.impl.ItemFuelInfo;
+import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.tool.ISoftHammerItem;
 import gregtech.api.gui.Widget.ClickData;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -24,14 +27,10 @@ import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.recipes.FuelRecipe;
 import gregtech.api.render.ICubeRenderer;
 import gregtech.api.render.OrientedOverlayRenderer;
-import gregtech.api.render.SimpleCubeRenderer;
-import gregtech.api.render.Textures;
+import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
-import gregtech.common.blocks.BlockBoilerCasing.BoilerCasingType;
+import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.BlockFireboxCasing;
-import gregtech.common.blocks.BlockFireboxCasing.FireboxCasingType;
-import gregtech.common.blocks.BlockMetalCasing.MetalCasingType;
-import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.tools.DamageValues;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -57,11 +56,10 @@ import java.util.*;
 import static gregtech.api.gui.widgets.AdvancedTextWidget.withButton;
 import static gregtech.api.gui.widgets.AdvancedTextWidget.withHoverTextTranslate;
 
-public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase implements IFuelable {
+public class MetaTileEntityLargeBoilerNew extends MultiblockWithDisplayBase implements IFuelable {
 
-    private static final int CONSUMPTION_MULTIPLIER = 100;
     private static final int BOILING_TEMPERATURE = 100;
-    public final BoilerType boilerType;
+    public final LargeBoilerType boilerType;
     private int currentTemperature;
     private int fuelBurnTicksLeft;
     private int throttlePercentage = 100;
@@ -73,7 +71,14 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     private ItemHandlerList itemImportInventory;
     private FluidTankList steamOutputTank;
 
-    public MetaTileEntityLargeBoiler(ResourceLocation metaTileEntityId, BoilerType boilerType) {
+    private int EUtGenerated = 1;
+
+    private int temperatureIncrease = 0;
+    private int superTemperatureIncrease = 0;
+    private int excessWater = 0; //Eliminate rounding errors for water
+    private int excessFuel = 0; //Eliminate rounding errors for fuels that burn half items
+
+    public MetaTileEntityLargeBoilerNew(ResourceLocation metaTileEntityId, LargeBoilerType boilerType) {
         super(metaTileEntityId);
         this.boilerType = boilerType;
         reinitializeStructurePattern();
@@ -81,7 +86,7 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
 
     @Override
     public MetaTileEntity createMetaTileEntity(MetaTileEntityHolder holder) {
-        return new MetaTileEntityLargeBoiler(metaTileEntityId, boilerType);
+        return new MetaTileEntityLargeBoilerNew(metaTileEntityId, boilerType);
     }
 
     @Override
@@ -103,6 +108,11 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
         this.hasNoWater = false;
         this.isActive = false;
         this.throttlePercentage = 100;
+        this.EUtGenerated = 0;
+        this.temperatureIncrease = 0;
+        this.superTemperatureIncrease = 0;
+        this.excessWater = 0;
+        this.excessFuel = 0;
         replaceFireboxAsActive(false);
     }
 
@@ -118,12 +128,8 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     protected void addDisplayText(List<ITextComponent> textList) {
         super.addDisplayText(textList);
         if (isStructureFormed()) {
-            textList.add(new TextComponentTranslation("gregtech.multiblock.large_boiler.temperature", currentTemperature, boilerType.maxTemperature));
-            textList.add(new TextComponentTranslation("gregtech.multiblock.large_boiler.steam_output", lastTickSteamOutput, boilerType.baseSteamOutput));
-
-            ITextComponent heatEffText = new TextComponentTranslation("gregtech.multiblock.large_boiler.heat_efficiency", (int) (getHeatEfficiencyMultiplier() * 100));
-            withHoverTextTranslate(heatEffText, "gregtech.multiblock.large_boiler.heat_efficiency.tooltip");
-            textList.add(heatEffText);
+            textList.add(new TextComponentTranslation("gregtech.multiblock.large_boiler.temperature", currentTemperature, boilerType.getMaxTemperature()));
+            textList.add(new TextComponentTranslation("gregtech.multiblock.large_boiler.steam_output", lastTickSteamOutput, this.EUtGenerated));
 
             ITextComponent throttleText = new TextComponentTranslation("gregtech.multiblock.large_boiler.throttle", throttlePercentage, (int) (getThrottleEfficiency() * 100));
             withHoverTextTranslate(throttleText, "gregtech.multiblock.large_boiler.throttle.tooltip");
@@ -146,59 +152,77 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
         this.throttlePercentage = MathHelper.clamp(throttlePercentage + result, 20, 100);
     }
 
-    private double getHeatEfficiencyMultiplier() {
-        double temperature = currentTemperature / (boilerType.maxTemperature * 1.0);
-        return 1.0 + Math.round(boilerType.temperatureEffBuff * temperature) / 100.0;
-    }
-
     @Override
     protected void updateFormedValid() {
-        if (fuelBurnTicksLeft > 0 && currentTemperature < boilerType.maxTemperature) {
-            --this.fuelBurnTicksLeft;
-            if (getOffsetTimer() % 20 == 0) {
-                this.currentTemperature++;
+        if (this.EUtGenerated > 0) {
+            if (this.superTemperatureIncrease > 0) {
+                //todo 6 - 6 is supposed to be maximum maintenance problems fixed - current maintenance problems fixed
+                this.currentTemperature = Math.max(currentTemperature + superTemperatureIncrease, boilerType.getMaxTemperature() - ((6 - 6) * 1000));
             }
-            if (fuelBurnTicksLeft == 0) {
-                this.wasActiveAndNeedsUpdate = true;
+
+            // Manage temperature and fuel burn time
+            if (fuelBurnTicksLeft > 0 && currentTemperature < boilerType.getMaxTemperature()) {
+                --this.fuelBurnTicksLeft;
+                if (getOffsetTimer() % 20 == 0) {
+                    this.currentTemperature = Math.min(this.currentTemperature + this.temperatureIncrease, boilerType.getMaxTemperature());
+                }
+                if (fuelBurnTicksLeft == 0) {
+                    this.wasActiveAndNeedsUpdate = true;
+                }
+            } else if (currentTemperature > 0 && getOffsetTimer() % 20 == 0) {
+                this.currentTemperature -= 20;
             }
-        } else if (currentTemperature > 0 && getOffsetTimer() % 20 == 0) {
-            --this.currentTemperature;
+
+            int generatedEU = this.EUtGenerated * 2 * this.currentTemperature / boilerType.getMaxTemperature();
+            if (generatedEU > 0) {
+
+
+                // water usage
+                long amount = (generatedEU + GTValues.STEAM_PER_WATER) / GTValues.STEAM_PER_WATER;
+                excessWater += amount * GTValues.STEAM_PER_WATER - generatedEU;
+                amount -= excessWater / GTValues.STEAM_PER_WATER;
+                excessWater %= GTValues.STEAM_PER_WATER;
+
+                boolean doWaterDrain = getOffsetTimer() % 20 == 0;
+                FluidStack drainedWater = null;
+                for (FluidStack fluidStack : RecipeMaps.BOILER_WATER_FLUIDS) {
+                    drainedWater = fluidImportInventory.drain(new FluidStack(fluidStack.getFluid(), (int) amount), doWaterDrain);
+                }
+
+                // check temperature, if no water and high temp -> explode
+                if (drainedWater != null && drainedWater.amount > 0) {
+                    if (currentTemperature > BOILING_TEMPERATURE && hasNoWater) {
+                        getWorld().setBlockToAir(getPos());
+                        if (ConfigHolder.doExplosions ){
+                            float explosionPower = currentTemperature / (float) BOILING_TEMPERATURE * 2.0f;
+                            getWorld().createExplosion(null, getPos().getX() + 0.5, getPos().getY() + 0.5, getPos().getZ() + 0.5,
+                                    explosionPower, true);
+                        }
+                        GTLog.logger.info("Boiler at: [" + getPos().getX() + ", " + getPos().getY() + ", " + getPos().getZ() + "] had no water!");
+                    }
+                    this.hasNoWater = false;
+
+                    // output steam
+                    if (currentTemperature >= BOILING_TEMPERATURE) {
+                        FluidStack steamStack = ModHandler.getSteam(generatedEU);
+                        steamOutputTank.fill(steamStack, true);
+                        this.lastTickSteamOutput = generatedEU;
+                    }
+                } else {
+                    this.hasNoWater = true;
+                }
+            }
+
+
         }
 
-        this.lastTickSteamOutput = 0;
-        if (currentTemperature >= BOILING_TEMPERATURE) {
-            boolean doWaterDrain = getOffsetTimer() % 20 == 0;
-            FluidStack drainedWater = fluidImportInventory.drain(ModHandler.getWater(1), doWaterDrain);
-            if (drainedWater == null || drainedWater.amount == 0) {
-                drainedWater = fluidImportInventory.drain(ModHandler.getDistilledWater(1), doWaterDrain);
-            }
-            if (drainedWater != null && drainedWater.amount > 0) {
-                if (currentTemperature > BOILING_TEMPERATURE && hasNoWater) {
-                    float explosionPower = currentTemperature / (float) BOILING_TEMPERATURE * 2.0f;
-                    getWorld().setBlockToAir(getPos());
-                    getWorld().createExplosion(null, getPos().getX() + 0.5, getPos().getY() + 0.5, getPos().getZ() + 0.5,
-                            explosionPower, true);
-                }
-                this.hasNoWater = false;
-                if (currentTemperature >= BOILING_TEMPERATURE) {
-                    double outputMultiplier = currentTemperature / (boilerType.maxTemperature * 1.0) * getThrottleMultiplier() * getThrottleEfficiency();
-                    int steamOutput = (int) (boilerType.baseSteamOutput * outputMultiplier);
-                    FluidStack steamStack = ModHandler.getSteam(steamOutput);
-                    steamOutputTank.fill(steamStack, true);
-                    this.lastTickSteamOutput = steamOutput;
-                }
-            } else {
-                this.hasNoWater = true;
-            }
-        } else {
-            this.hasNoWater = false;
-        }
-
+        // consume more fuel if necessary
         if (fuelBurnTicksLeft == 0) {
-            double heatEfficiency = getHeatEfficiencyMultiplier();
-            int fuelMaxBurnTime = (int) Math.round(setupRecipeAndConsumeInputs() * heatEfficiency);
+            int fuelMaxBurnTime = setupRecipeAndConsumeInputs();
             if (fuelMaxBurnTime > 0) {
                 this.fuelBurnTicksLeft = fuelMaxBurnTime;
+                System.out.println("fuelBurnTicksLeft " + this.fuelBurnTicksLeft);
+                System.out.println("EUGenerated " + this.EUtGenerated);
                 if (wasActiveAndNeedsUpdate) {
                     this.wasActiveAndNeedsUpdate = false;
                 } else setActive(true);
@@ -215,33 +239,66 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     private int setupRecipeAndConsumeInputs() {
         for (IFluidTank fluidTank : fluidImportInventory.getFluidTanks()) {
             FluidStack fuelStack = fluidTank.drain(Integer.MAX_VALUE, false);
-            if (fuelStack == null || ModHandler.isWater(fuelStack))
-                continue; //ignore empty tanks and water
-            FuelRecipe dieselRecipe = RecipeMaps.COMBUSTION_GENERATOR_FUELS.findRecipe(GTValues.V[9], fuelStack);
+
+            if (fuelStack == null || GTUtility.isValidWaterFluid(fuelStack))
+                continue; // ignore empty tanks and non-valid water
+
+            // Check Combustion Generator Fuels
+            FuelRecipe dieselRecipe = RecipeMaps.COMBUSTION_GENERATOR_FUELS.findRecipe(GTValues.V[GTValues.MAX], fuelStack);
+            int fuelAmountToConsume = 1000;
+
             if (dieselRecipe != null) {
-                int fuelAmountToConsume = (int) Math.ceil(dieselRecipe.getRecipeFluid().amount * CONSUMPTION_MULTIPLIER * boilerType.fuelConsumptionMultiplier * getThrottleMultiplier());
                 if (fuelStack.amount >= fuelAmountToConsume) {
                     fluidTank.drain(fuelAmountToConsume, true);
-                    long recipeVoltage = FuelRecipeLogic.getTieredVoltage(dieselRecipe.getMinVoltage());
-                    int voltageMultiplier = (int) Math.max(1L, recipeVoltage / GTValues.V[GTValues.LV]);
-                    return (int) Math.ceil(dieselRecipe.getDuration() * CONSUMPTION_MULTIPLIER / 2.0 * voltageMultiplier * getThrottleMultiplier());
+
+                    // total duration for fuelAmountToConsume worth of fuel
+                    int dieselRecipeTotalDuration = dieselRecipe.getDuration() / dieselRecipe.getRecipeFluid().amount * fuelAmountToConsume;
+
+                    // save EUt generated
+                    this.EUtGenerated = boilerType.getEUt();
+
+                    // Boiler Specific Duration Multiplier * Throttle Percentage * Diesel Fuel Duration for Fuel Amount To Consume / 2
+                    int duration = (int) Math.max(1, this.boilerType.getDurationMultiplier() * getThrottleMultiplier() * dieselRecipeTotalDuration / 2);
+
+                    // save efficiency
+                    this.temperatureIncrease = duration / 20 * boilerType.getBoilerTemperatureIncrease() * 4 / 1000;
+                    System.out.println("temperatureIncrease " + this.temperatureIncrease);
+
+                    return duration;
+
                 } else continue;
             }
-            FuelRecipe denseFuelRecipe = RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.findRecipe(GTValues.V[9], fuelStack);
+
+            // Check Semi Fluid Generator Fuels
+            FuelRecipe denseFuelRecipe = RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.findRecipe(GTValues.V[GTValues.MAX], fuelStack);
             if (denseFuelRecipe != null) {
-                int fuelAmountToConsume = (int) Math.ceil(denseFuelRecipe.getRecipeFluid().amount * CONSUMPTION_MULTIPLIER * boilerType.fuelConsumptionMultiplier * getThrottleMultiplier());
                 if (fuelStack.amount >= fuelAmountToConsume) {
                     fluidTank.drain(fuelAmountToConsume, true);
-                    long recipeVoltage = FuelRecipeLogic.getTieredVoltage(denseFuelRecipe.getMinVoltage());
-                    int voltageMultiplier = (int) Math.max(1L, recipeVoltage / GTValues.V[GTValues.LV]);
-                    return (int) Math.ceil(denseFuelRecipe.getDuration() * CONSUMPTION_MULTIPLIER * 2 * voltageMultiplier * getThrottleMultiplier());
+
+                    // total duration for fuelAmountToConsume worth of fuel
+                    int semiFluidRecipeTotalDuration = denseFuelRecipe.getDuration() / denseFuelRecipe.getRecipeFluid().amount * fuelAmountToConsume;
+
+                    // save EUt generated
+                    this.EUtGenerated = boilerType.getEUt();
+
+                    // Boiler Specific Duration Multiplier * Throttle Percentage * Semi Fluid Fuel Duration for Fuel Amount To Consume * 2
+                    int duration = (int) Math.max(1, this.boilerType.getDurationMultiplier() * getThrottleMultiplier() * semiFluidRecipeTotalDuration * 2);
+
+                    // save temperature increase
+                    this.temperatureIncrease = duration * boilerType.getBoilerTemperatureIncrease() * 4 / 100;
+
+                    return duration;
+
                 }
             }
         }
         for (int slotIndex = 0; slotIndex < itemImportInventory.getSlots(); slotIndex++) {
             ItemStack itemStack = itemImportInventory.getStackInSlot(slotIndex);
-            int fuelBurnValue = (int) Math.ceil(TileEntityFurnace.getItemBurnTime(itemStack) / (50.0 * boilerType.fuelConsumptionMultiplier * getThrottleMultiplier()));
-            if (fuelBurnValue > 0) {
+
+            int solidFuelDuration = TileEntityFurnace.getItemBurnTime(itemStack);
+
+            if (solidFuelDuration / 80 > 0) {
+
                 if (itemStack.getCount() == 1) {
                     ItemStack containerItem = itemStack.getItem().getContainerItem(itemStack);
                     itemImportInventory.setStackInSlot(slotIndex, containerItem);
@@ -249,9 +306,30 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
                     itemStack.shrink(1);
                     itemImportInventory.setStackInSlot(slotIndex, itemStack);
                 }
-                return fuelBurnValue;
+
+                // store excess fuel
+                this.excessFuel += solidFuelDuration % 80;
+                solidFuelDuration += this.excessFuel / 80;
+                this.excessFuel %= 80;
+
+                // Solid Fuel Burn Time / 80 * Boiler Specific Duration Multiplier * Throttle Percentage
+                solidFuelDuration *= this.boilerType.getDurationMultiplier() * getThrottleMultiplier();
+
+                // apply super increase
+                // save efficiency
+                this.temperatureIncrease = solidFuelDuration * boilerType.getBoilerTemperatureIncrease();
+                if (this.temperatureIncrease > 5000) {
+                    this.temperatureIncrease = 0;
+                    this.superTemperatureIncrease = 20;
+                }
+
+                // save EUt generated
+                this.EUtGenerated = boilerType.getEUt();
+
+                return solidFuelDuration;
             }
         }
+        this.EUtGenerated = 0;
         return 0;
     }
 
@@ -262,6 +340,11 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
         data.setInteger("FuelBurnTicksLeft", fuelBurnTicksLeft);
         data.setBoolean("HasNoWater", hasNoWater);
         data.setInteger("ThrottlePercentage", throttlePercentage);
+        data.setInteger("EUtGenerated", EUtGenerated);
+        data.setInteger("TemperatureIncrease", temperatureIncrease);
+        data.setInteger("SuperTemperatureIncrease", superTemperatureIncrease);
+        data.setInteger("ExcessWater", excessWater);
+        data.setInteger("ExcessFuel", excessFuel);
         return data;
     }
 
@@ -271,6 +354,11 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
         this.currentTemperature = data.getInteger("CurrentTemperature");
         this.fuelBurnTicksLeft = data.getInteger("FuelBurnTicksLeft");
         this.hasNoWater = data.getBoolean("HasNoWater");
+        this.EUtGenerated = data.getInteger("EUtGenerated");
+        this.temperatureIncrease = data.getInteger("TemperatureIncrease");
+        this.superTemperatureIncrease = data.getInteger("SuperTemperatureIncrease");
+        this.excessWater = data.getInteger("ExcessWater");
+        this.excessFuel = data.getInteger("ExcessFuel");
         if (data.hasKey("ThrottlePercentage")) {
             this.throttlePercentage = data.getInteger("ThrottlePercentage");
         }
@@ -344,11 +432,10 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
                 .setAmountAtLeast('X', 4)
                 .setAmountAtLeast('C', 20)
                 .where('S', selfPredicate())
-                .where('P', statePredicate(boilerType.pipeState))
-                .where('X', state -> statePredicate(GTUtility.getAllPropertyValues(boilerType.fireboxState, BlockFireboxCasing.ACTIVE))
+                .where('P', statePredicate(boilerType.getPipeCasingState()))
+                .where('X', state -> statePredicate(GTUtility.getAllPropertyValues(boilerType.getFireBoxState(), BlockFireboxCasing.ACTIVE))
                         .or(abilityPartPredicate(MultiblockAbility.IMPORT_FLUIDS, MultiblockAbility.IMPORT_ITEMS)).test(state))
-                .where('C', statePredicate(boilerType.casingState).or(abilityPartPredicate(
-                        MultiblockAbility.EXPORT_FLUIDS)))
+                .where('C', statePredicate(boilerType.getCasingState()).or(abilityPartPredicate(MultiblockAbility.EXPORT_FLUIDS)))
                 .build();
     }
 
@@ -361,7 +448,7 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     @Nonnull
     @Override
     protected OrientedOverlayRenderer getFrontOverlay() {
-        return boilerType.frontOverlay;
+        return boilerType.getFrontOverlay();
     }
 
     @Override
@@ -381,9 +468,9 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     @Override
     public ICubeRenderer getBaseTexture(IMultiblockPart sourcePart) {
         if (sourcePart != null && isFireboxPart(sourcePart)) {
-            return isActive ? boilerType.firefoxActiveRenderer : boilerType.fireboxIdleRenderer;
+            return isActive ? boilerType.getFirefoxActiveRenderer() : boilerType.getFireboxIdleRenderer();
         }
-        return boilerType.solidCasingRenderer;
+        return boilerType.getSolidCasingRenderer();
     }
 
     @Override
@@ -425,121 +512,75 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
         int fluidCapacity = 0; // fluid capacity is all non water tanks
         for (IFluidTank fluidTank : fluidImportInventory.getFluidTanks()) {
             FluidStack fuelStack = fluidTank.drain(Integer.MAX_VALUE, false);
-            if (!ModHandler.isWater(fuelStack))
+            if (!GTUtility.isValidWaterFluid(fuelStack))
                 fluidCapacity += fluidTank.getCapacity();
         }
         for (IFluidTank fluidTank : fluidImportInventory.getFluidTanks()) {
             FluidStack fuelStack = fluidTank.drain(Integer.MAX_VALUE, false);
-            if (fuelStack == null || ModHandler.isWater(fuelStack))
+            if (fuelStack == null || GTUtility.isValidWaterFluid(fuelStack))
                 continue;
-            FuelRecipe dieselRecipe = RecipeMaps.COMBUSTION_GENERATOR_FUELS.findRecipe(GTValues.V[9], fuelStack);
+
+            int fuelAmountToConsume = 1000;
+            int duration = 0;
+
+            FuelRecipe dieselRecipe = RecipeMaps.COMBUSTION_GENERATOR_FUELS.findRecipe(GTValues.V[GTValues.MAX], fuelStack);
             if (dieselRecipe != null) {
-                long recipeVoltage = FuelRecipeLogic.getTieredVoltage(dieselRecipe.getMinVoltage());
-                int voltageMultiplier = (int) Math.max(1L, recipeVoltage / GTValues.V[GTValues.LV]);
-                int burnTime = (int) Math.ceil(dieselRecipe.getDuration() * CONSUMPTION_MULTIPLIER / 2.0 * voltageMultiplier * getThrottleMultiplier());
-                int fuelAmountToConsume = (int) Math.ceil(dieselRecipe.getRecipeFluid().amount * CONSUMPTION_MULTIPLIER * boilerType.fuelConsumptionMultiplier * getThrottleMultiplier());
-                final long fuelBurnTime = (fuelStack.amount * burnTime) / fuelAmountToConsume;
-                FluidFuelInfo fluidFuelInfo = (FluidFuelInfo) fuels.get(fuelStack.getUnlocalizedName());
-                if (fluidFuelInfo == null) {
-                    fluidFuelInfo = new FluidFuelInfo(fuelStack, fuelStack.amount, fluidCapacity, fuelAmountToConsume, fuelBurnTime);
-                    fuels.put(fuelStack.getUnlocalizedName(), fluidFuelInfo);
-                } else {
-                    fluidFuelInfo.addFuelRemaining(fuelStack.amount);
-                    fluidFuelInfo.addFuelBurnTime(fuelBurnTime);
-                }
+                // total duration for fuelAmountToConsume worth of fuel
+                int dieselRecipeTotalDuration = dieselRecipe.getDuration() / dieselRecipe.getRecipeFluid().amount * fuelAmountToConsume;
+
+                // Boiler Specific Duration Multiplier * Throttle Percentage * Diesel Fuel Duration for Fuel Amount To Consume / 2
+                duration = (int) Math.max(1, this.boilerType.getDurationMultiplier() * getThrottleMultiplier() * dieselRecipeTotalDuration / 2);
             }
-            FuelRecipe denseFuelRecipe = RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.findRecipe(GTValues.V[9], fuelStack);
+
+            FuelRecipe denseFuelRecipe = RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.findRecipe(GTValues.V[GTValues.MAX], fuelStack);
             if (denseFuelRecipe != null) {
-                long recipeVoltage = FuelRecipeLogic.getTieredVoltage(denseFuelRecipe.getMinVoltage());
-                int voltageMultiplier = (int) Math.max(1L, recipeVoltage / GTValues.V[GTValues.LV]);
-                int burnTime = (int) Math.ceil(denseFuelRecipe.getDuration() * CONSUMPTION_MULTIPLIER * 2 * voltageMultiplier * getThrottleMultiplier());
-                int fuelAmountToConsume = (int) Math.ceil(denseFuelRecipe.getRecipeFluid().amount * CONSUMPTION_MULTIPLIER * boilerType.fuelConsumptionMultiplier * getThrottleMultiplier());
-                final long fuelBurnTime = (fuelStack.amount * burnTime) / fuelAmountToConsume;
-                FluidFuelInfo fluidFuelInfo = (FluidFuelInfo) fuels.get(fuelStack.getUnlocalizedName());
-                if (fluidFuelInfo == null) {
-                    fluidFuelInfo = new FluidFuelInfo(fuelStack, fuelStack.amount, fluidCapacity, fuelAmountToConsume, fuelBurnTime);
-                    fuels.put(fuelStack.getUnlocalizedName(), fluidFuelInfo);
-                } else {
-                    fluidFuelInfo.addFuelRemaining(fuelStack.amount);
-                    fluidFuelInfo.addFuelBurnTime(fuelBurnTime);
-                }
+                // total duration for fuelAmountToConsume worth of fuel
+                int semiFluidRecipeTotalDuration = denseFuelRecipe.getDuration() / denseFuelRecipe.getRecipeFluid().amount * fuelAmountToConsume;
+
+                // Boiler Specific Duration Multiplier * Throttle Percentage * Semi Fluid Fuel Duration for Fuel Amount To Consume * 2
+                duration = (int) Math.max(1, this.boilerType.getDurationMultiplier() * getThrottleMultiplier() * semiFluidRecipeTotalDuration * 2);
+            }
+
+            FluidFuelInfo fluidFuelInfo = (FluidFuelInfo) fuels.get(fuelStack.getUnlocalizedName());
+            if (fluidFuelInfo == null) {
+                fluidFuelInfo = new FluidFuelInfo(fuelStack, fuelStack.amount, fluidCapacity, fuelAmountToConsume, duration);
+                fuels.put(fuelStack.getUnlocalizedName(), fluidFuelInfo);
+            } else {
+                fluidFuelInfo.addFuelRemaining(fuelStack.amount);
+                fluidFuelInfo.addFuelBurnTime(duration);
             }
         }
         int itemCapacity = 0; // item capacity is all slots
         for (int slotIndex = 0; slotIndex < itemImportInventory.getSlots(); slotIndex++) {
             itemCapacity += itemImportInventory.getSlotLimit(slotIndex);
         }
+
         for (int slotIndex = 0; slotIndex < itemImportInventory.getSlots(); slotIndex++) {
             ItemStack itemStack = itemImportInventory.getStackInSlot(slotIndex);
-            final long burnTime = (int) Math.ceil(TileEntityFurnace.getItemBurnTime(itemStack) / (50.0 * this.boilerType.fuelConsumptionMultiplier * getThrottleMultiplier()));
-            if (burnTime > 0) {
+
+            int solidFuelDuration = TileEntityFurnace.getItemBurnTime(itemStack);
+
+            if (solidFuelDuration / 80 > 0) {
+
+                // store excess fuel
+                this.excessFuel += solidFuelDuration % 80;
+                solidFuelDuration += this.excessFuel / 80;
+                this.excessFuel %= 80;
+
+                // Solid Fuel Burn Time / 80 * Boiler Specific Duration Multiplier * Throttle Percentage
+                solidFuelDuration *= this.boilerType.getDurationMultiplier() * getThrottleMultiplier();
+            }
+            if (solidFuelDuration > 0) {
                 ItemFuelInfo itemFuelInfo = (ItemFuelInfo) fuels.get(itemStack.getTranslationKey());
                 if (itemFuelInfo == null) {
-                    itemFuelInfo = new ItemFuelInfo(itemStack, itemStack.getCount(), itemCapacity, 1, itemStack.getCount() * burnTime);
+                    itemFuelInfo = new ItemFuelInfo(itemStack, itemStack.getCount(), itemCapacity, 1, (long) itemStack.getCount() * solidFuelDuration);
                     fuels.put(itemStack.getTranslationKey(), itemFuelInfo);
                 } else {
                     itemFuelInfo.addFuelRemaining(itemStack.getCount());
-                    itemFuelInfo.addFuelBurnTime(itemStack.getCount() * burnTime);
+                    itemFuelInfo.addFuelBurnTime((long) itemStack.getCount() * solidFuelDuration);
                 }
             }
         }
         return fuels.values();
-    }
-
-    public enum BoilerType {
-        BRONZE(800, 1.0f, 28, 500,
-                MetaBlocks.METAL_CASING.getState(MetalCasingType.BRONZE_BRICKS),
-                MetaBlocks.BOILER_FIREBOX_CASING.getState(FireboxCasingType.BRONZE_FIREBOX),
-                MetaBlocks.BOILER_CASING.getState(BoilerCasingType.BRONZE_PIPE),
-                Textures.BRONZE_PLATED_BRICKS,
-                Textures.BRONZE_FIREBOX, Textures.BRONZE_FIREBOX_ACTIVE, Textures.LARGE_BRONZE_BOILER),
-
-        STEEL(1200, 1.6f, 30, 800,
-                MetaBlocks.METAL_CASING.getState(MetalCasingType.STEEL_SOLID),
-                MetaBlocks.BOILER_FIREBOX_CASING.getState(FireboxCasingType.STEEL_FIREBOX),
-                MetaBlocks.BOILER_CASING.getState(BoilerCasingType.STEEL_PIPE),
-                Textures.SOLID_STEEL_CASING,
-                Textures.STEEL_FIREBOX, Textures.STEEL_FIREBOX_ACTIVE, Textures.LARGE_STEEL_BOILER),
-
-        TITANIUM(1600, 3.0f, 31, 2000,
-                MetaBlocks.METAL_CASING.getState(MetalCasingType.TITANIUM_STABLE),
-                MetaBlocks.BOILER_FIREBOX_CASING.getState(FireboxCasingType.TITANIUM_FIREBOX),
-                MetaBlocks.BOILER_CASING.getState(BoilerCasingType.TITANIUM_PIPE),
-                Textures.STABLE_TITANIUM_CASING,
-                Textures.TITANIUM_FIREBOX, Textures.TITANIUM_FIREBOX_ACTIVE, Textures.LARGE_TITANIUM_BOILER),
-
-        TUNGSTENSTEEL(2000, 5.4f, 32, 4000,
-                MetaBlocks.METAL_CASING.getState(MetalCasingType.TUNGSTENSTEEL_ROBUST),
-                MetaBlocks.BOILER_FIREBOX_CASING.getState(FireboxCasingType.TUNGSTENSTEEL_FIREBOX),
-                MetaBlocks.BOILER_CASING.getState(BoilerCasingType.TUNGSTENSTEEL_PIPE),
-                Textures.ROBUST_TUNGSTENSTEEL_CASING,
-                Textures.TUNGSTENSTEEL_FIREBOX, Textures.TUNGSTENSTEEL_FIREBOX_ACTIVE, Textures.LARGE_TUNGSTENSTEEL_BOILER);
-
-        public final int baseSteamOutput;
-        public final float fuelConsumptionMultiplier;
-        public final int temperatureEffBuff;
-        public final int maxTemperature;
-        public final IBlockState casingState;
-        public final IBlockState fireboxState;
-        public final IBlockState pipeState;
-        public final ICubeRenderer solidCasingRenderer;
-        public final SimpleCubeRenderer fireboxIdleRenderer;
-        public final SimpleCubeRenderer firefoxActiveRenderer;
-        public final OrientedOverlayRenderer frontOverlay;
-
-        BoilerType(int baseSteamOutput, float fuelConsumptionMultiplier, int temperatureEffBuff, int maxTemperature, IBlockState casingState, IBlockState fireboxState, IBlockState pipeState,
-                   ICubeRenderer solidCasingRenderer, SimpleCubeRenderer fireboxIdleRenderer, SimpleCubeRenderer firefoxActiveRenderer, OrientedOverlayRenderer frontOverlay) {
-            this.baseSteamOutput = baseSteamOutput;
-            this.fuelConsumptionMultiplier = fuelConsumptionMultiplier;
-            this.temperatureEffBuff = temperatureEffBuff;
-            this.maxTemperature = maxTemperature;
-            this.casingState = casingState;
-            this.fireboxState = fireboxState;
-            this.pipeState = pipeState;
-            this.solidCasingRenderer = solidCasingRenderer;
-            this.fireboxIdleRenderer = fireboxIdleRenderer;
-            this.firefoxActiveRenderer = firefoxActiveRenderer;
-            this.frontOverlay = frontOverlay;
-        }
     }
 }
