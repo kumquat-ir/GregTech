@@ -164,6 +164,8 @@ public class GTJeiPlugin implements IModPlugin {
             }
         }
 
+        registry.addRecipeCatalyst(MetaTileEntities.LARGE_CHEMICAL_REACTOR.getStackForm(), GTValues.MODID + ":" + RecipeMaps.CHEMICAL_RECIPES.getUnlocalizedName());
+
         String semiFluidMapId = GTValues.MODID + ":" + RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.getUnlocalizedName();
         registry.addRecipeCatalyst(MetaTileEntities.LARGE_BRONZE_BOILER.getStackForm(), semiFluidMapId);
         registry.addRecipeCatalyst(MetaTileEntities.LARGE_STEEL_BOILER.getStackForm(), semiFluidMapId);
